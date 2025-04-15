@@ -152,8 +152,6 @@ export class ShopifyClient implements ShopifyClientPort {
         ...(data ? { body: JSON.stringify(data) } : {}),
       });
 
-      console.log(">>>", JSON.stringify(data));
-
       if (!response.ok) {
         const responseData = await response
           .json()
@@ -904,16 +902,82 @@ export class ShopifyClient implements ShopifyClientPort {
     shop: string,
     queryParams: ShopifyLoadOrderQueryParams,
   ): Promise<ShopifyOrder> {
-    const res = await this.shopifyHTTPRequest<{ order: ShopifyOrder }>({
-      method: "POST",
-      url: `https://${shop}/admin/api/${this.SHOPIFY_API_VERSION}/orders/${queryParams.orderId}.json`,
+    const myshopifyDomain = await this.getMyShopifyDomain(accessToken, shop);
+
+    const graphqlQuery = gql`
+      query getOrderDetails($id: ID!) {
+        order(id: $id) {
+          id
+          name
+          createdAt
+          displayFinancialStatus
+          email
+          phone
+          totalPriceSet {
+            shopMoney {
+              amount
+              currencyCode
+            }
+            presentmentMoney {
+              amount
+              currencyCode
+            }
+          }
+          customer {
+            id
+            email
+          }
+          shippingAddress {
+            address1
+            address2
+            formattedArea
+            zip
+          }
+          lineItems(first: 50) {
+            nodes {
+              id
+              title
+              quantity
+              originalTotalSet {
+                shopMoney {
+                  amount
+                  currencyCode
+                }
+              }
+              variant {
+                id
+                title
+                sku
+                price
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    // Format the ID to ensure it's a valid Shopify GraphQL ID
+    const formattedId = queryParams.orderId.includes("gid://")
+      ? queryParams.orderId
+      : `gid://shopify/Order/${queryParams.orderId}`;
+
+    const variables = {
+      id: formattedId,
+      // Remove the fields variable since it's not used in the query
+    };
+
+    const res = await this.shopifyGraphqlRequest<{
+      data: {
+        order: ShopifyOrder;
+      };
+    }>({
+      url: `https://${myshopifyDomain}/admin/api/${this.SHOPIFY_API_VERSION}/graphql.json`,
       accessToken,
-      params: {
-        fields: this.getOrdersFields(queryParams.fields),
-      },
+      query: graphqlQuery,
+      variables,
     });
 
-    return res.data.order;
+    return res.data.data.order; // Make sure to access data.data.order based on your response structure
   }
 
   async updateOrderShippingAddress(
