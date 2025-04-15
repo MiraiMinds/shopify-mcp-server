@@ -44,6 +44,8 @@ import {
   ShopifyOrdersGraphqlQueryParams,
   ShopifyOrdersGraphqlResponse,
   ShopifyOrderGraphql,
+  UpdateShopifyOrderShippingAdress,
+  ShopifyUpdateOrderShippingAdressQueryParams,
 } from "./ShopifyClientPort.js";
 import { gql } from "graphql-request";
 
@@ -149,6 +151,8 @@ export class ShopifyClient implements ShopifyClientPort {
         },
         ...(data ? { body: JSON.stringify(data) } : {}),
       });
+
+      console.log(">>>", JSON.stringify(data));
 
       if (!response.ok) {
         const responseData = await response
@@ -256,7 +260,7 @@ export class ShopifyClient implements ShopifyClientPort {
             query,
             variables,
             data: error.response.data,
-          }
+          },
         );
       } else {
         shopifyError = new GeneralShopifyClientError({
@@ -290,7 +294,7 @@ export class ShopifyClient implements ShopifyClientPort {
 
   private async getMyShopifyDomain(
     accessToken: string,
-    shop: string
+    shop: string,
   ): Promise<string> {
     // POST requests are getting converted into GET on custom domain, so we need to retrieve the myshopify domain from the shop object
     const loadedShop = await this.loadShop(accessToken, shop);
@@ -299,7 +303,7 @@ export class ShopifyClient implements ShopifyClientPort {
 
   async checkSubscriptionEligibility(
     accessToken: string,
-    myshopifyDomain: string
+    myshopifyDomain: string,
   ): Promise<boolean> {
     const graphqlQuery = gql`
       query CheckSubscriptionEligibility {
@@ -336,7 +340,7 @@ export class ShopifyClient implements ShopifyClientPort {
   async createBasicDiscountCode(
     accessToken: string,
     shop: string,
-    discountInput: CreateBasicDiscountCodeInput
+    discountInput: CreateBasicDiscountCodeInput,
   ): Promise<CreateBasicDiscountCodeResponse> {
     if (discountInput.valueType === "percentage") {
       if (discountInput.value < 0 || discountInput.value > 1) {
@@ -348,7 +352,7 @@ export class ShopifyClient implements ShopifyClientPort {
               discountInput,
               shop,
             },
-          }
+          },
         );
       }
     }
@@ -363,7 +367,7 @@ export class ShopifyClient implements ShopifyClientPort {
               discountInput,
               shop,
             },
-          }
+          },
         );
       }
     }
@@ -372,7 +376,7 @@ export class ShopifyClient implements ShopifyClientPort {
 
     const isEligibleForSubscription = await this.checkSubscriptionEligibility(
       accessToken,
-      myShopifyDomain
+      myShopifyDomain,
     );
 
     const graphqlQuery =
@@ -380,7 +384,7 @@ export class ShopifyClient implements ShopifyClientPort {
 
     const variables = this.prepareBasicDiscountCodeVariable(
       discountInput,
-      isEligibleForSubscription
+      isEligibleForSubscription,
     );
 
     const res = await this.shopifyGraphqlRequest<BasicDiscountCodeResponse>({
@@ -469,7 +473,7 @@ export class ShopifyClient implements ShopifyClientPort {
 
   private prepareBasicDiscountCodeVariable(
     discountInput: CreateBasicDiscountCodeInput,
-    isEligibleForSubscription: boolean
+    isEligibleForSubscription: boolean,
   ): any {
     return {
       basicCodeDiscount: {
@@ -507,10 +511,10 @@ export class ShopifyClient implements ShopifyClientPort {
               discountInput.excludeCollectionIds.length
                 ? {
                     add: discountInput.includeCollectionIds.map(
-                      (id) => `gid://shopify/Collection/${id}`
+                      (id) => `gid://shopify/Collection/${id}`,
                     ),
                     remove: discountInput.excludeCollectionIds.map(
-                      (id) => `gid://shopify/Collection/${id}`
+                      (id) => `gid://shopify/Collection/${id}`,
                     ),
                   }
                 : undefined,
@@ -535,7 +539,7 @@ export class ShopifyClient implements ShopifyClientPort {
   async createPriceRule(
     accessToken: string,
     shop: string,
-    priceRuleInput: CreatePriceRuleInput
+    priceRuleInput: CreatePriceRuleInput,
   ): Promise<CreatePriceRuleResponse> {
     const myshopifyDomain = await this.getMyShopifyDomain(accessToken, shop);
 
@@ -600,7 +604,7 @@ export class ShopifyClient implements ShopifyClientPort {
           },
           itemEntitlements: {
             collectionIds: priceRuleInput.entitledCollectionIds.map(
-              (id) => `gid://shopify/Collection/${id}`
+              (id) => `gid://shopify/Collection/${id}`,
             ),
             targetAllLineItems:
               priceRuleInput.entitledCollectionIds.length === 0,
@@ -633,7 +637,7 @@ export class ShopifyClient implements ShopifyClientPort {
     accessToken: string,
     shop: string,
     code: string,
-    priceRuleId: string
+    priceRuleId: string,
   ): Promise<CreateDiscountCodeResponse> {
     const myshopifyDomain = await this.getMyShopifyDomain(accessToken, shop);
 
@@ -711,7 +715,7 @@ export class ShopifyClient implements ShopifyClientPort {
   async deleteBasicDiscountCode(
     accessToken: string,
     shop: string,
-    discountCodeId: string
+    discountCodeId: string,
   ): Promise<void> {
     const myshopifyDomain = await this.getMyShopifyDomain(accessToken, shop);
 
@@ -761,7 +765,7 @@ export class ShopifyClient implements ShopifyClientPort {
   async deletePriceRule(
     accessToken: string,
     shop: string,
-    priceRuleId: string
+    priceRuleId: string,
   ): Promise<void> {
     const myshopifyDomain = await this.getMyShopifyDomain(accessToken, shop);
 
@@ -776,7 +780,7 @@ export class ShopifyClient implements ShopifyClientPort {
     accessToken: string,
     shop: string,
     priceRuleId: string,
-    discountCodeId: string
+    discountCodeId: string,
   ): Promise<void> {
     const myshopifyDomain = await this.getMyShopifyDomain(accessToken, shop);
 
@@ -790,7 +794,7 @@ export class ShopifyClient implements ShopifyClientPort {
   async loadOrders(
     accessToken: string,
     shop: string,
-    queryParams: ShopifyOrdersGraphqlQueryParams
+    queryParams: ShopifyOrdersGraphqlQueryParams,
   ): Promise<ShopifyOrdersGraphqlResponse> {
     const myshopifyDomain = await this.getMyShopifyDomain(accessToken, shop);
 
@@ -896,10 +900,10 @@ export class ShopifyClient implements ShopifyClientPort {
   async loadOrder(
     accessToken: string,
     shop: string,
-    queryParams: ShopifyLoadOrderQueryParams
+    queryParams: ShopifyLoadOrderQueryParams,
   ): Promise<ShopifyOrder> {
     const res = await this.shopifyHTTPRequest<{ order: ShopifyOrder }>({
-      method: "GET",
+      method: "POST",
       url: `https://${shop}/admin/api/${this.SHOPIFY_API_VERSION}/orders/${queryParams.orderId}.json`,
       accessToken,
       params: {
@@ -910,11 +914,61 @@ export class ShopifyClient implements ShopifyClientPort {
     return res.data.order;
   }
 
+  async updateOrderShippingAddress(
+    accessToken: string,
+    shop: string,
+    queryParams: ShopifyUpdateOrderShippingAdressQueryParams,
+    shippingAddress: { [key: string]: unknown },
+  ): Promise<UpdateShopifyOrderShippingAdress> {
+    const graphqlQuery = gql`
+      mutation updateOrderShippingAddress($input: OrderInput!) {
+        orderUpdate(input: $input) {
+          order {
+            id
+            shippingAddress {
+              address1
+              address2
+              city
+              countryCode
+              zip
+            }
+          }
+          userErrors {
+            field
+            message
+          }
+        }
+      }
+    `;
+
+    const res = await this.shopifyGraphqlRequest<{
+      data: {
+        orderUpdate: {
+          order: UpdateShopifyOrderShippingAdress;
+          userErrors: any[];
+        };
+      };
+    }>({
+      url: `https://${shop}/admin/api/2025-04/graphql.json`, // Using the latest API version you used in fetch
+      accessToken,
+      query: graphqlQuery,
+      variables: {
+        input: {
+          shippingAddress: shippingAddress,
+          id: `gid://shopify/Order/${queryParams.orderId}`,
+        },
+      },
+    });
+
+    // Ensure we're accessing the correct path in the response
+    return res.data.data.orderUpdate.order;
+  }
+
   async loadCollections(
     accessToken: string,
     shop: string,
     queryParams: ShopifyCollectionsQueryParams,
-    next?: string
+    next?: string,
   ): Promise<LoadCollectionsResponse> {
     const nextList = next?.split(",");
     const customNext = nextList?.[0];
@@ -941,7 +995,7 @@ export class ShopifyClient implements ShopifyClientPort {
       customCollections = customRes.data?.custom_collections || [];
 
       customCollectionsNextPage = ShopifyClient.getShopifyOrdersNextPage(
-        customRes.headers?.get("link")
+        customRes.headers?.get("link"),
       );
     }
     if (smartNext !== "undefined") {
@@ -961,7 +1015,7 @@ export class ShopifyClient implements ShopifyClientPort {
       smartCollections = smartRes.data?.smart_collections || [];
 
       smartCollectionsNextPage = ShopifyClient.getShopifyOrdersNextPage(
-        smartRes.headers?.get("link")
+        smartRes.headers?.get("link"),
       );
     }
     const collections = [...customCollections, ...smartCollections];
@@ -976,7 +1030,7 @@ export class ShopifyClient implements ShopifyClientPort {
 
   async loadShop(
     accessToken: string,
-    shop: string
+    shop: string,
   ): Promise<LoadStorefrontsResponse> {
     const res = await this.shopifyHTTPRequest<LoadStorefrontsResponse>({
       method: "GET",
@@ -989,7 +1043,7 @@ export class ShopifyClient implements ShopifyClientPort {
 
   async loadShopDetail(
     accessToken: string,
-    shop: string
+    shop: string,
   ): Promise<ShopResponse> {
     const myshopifyDomain = await this.getMyShopifyDomain(accessToken, shop);
 
@@ -1047,7 +1101,7 @@ export class ShopifyClient implements ShopifyClientPort {
     shop: string,
     collectionId: string,
     limit: number = 10,
-    afterCursor?: string
+    afterCursor?: string,
   ): Promise<LoadProductsResponse> {
     const myshopifyDomain = await this.getMyShopifyDomain(accessToken, shop);
 
@@ -1112,7 +1166,7 @@ export class ShopifyClient implements ShopifyClientPort {
     myshopifyDomain: string,
     searchTitle: string | null,
     limit: number = 10,
-    afterCursor?: string
+    afterCursor?: string,
   ): Promise<LoadProductsResponse> {
     const titleFilter = searchTitle ? `title:*${searchTitle}*` : "";
     const graphqlQuery = gql`
@@ -1170,7 +1224,7 @@ export class ShopifyClient implements ShopifyClientPort {
   async loadVariantsByIds(
     accessToken: string,
     shop: string,
-    variantIds: string[]
+    variantIds: string[],
   ): Promise<LoadVariantsByIdResponse> {
     const myshopifyDomain = await this.getMyShopifyDomain(accessToken, shop);
 
@@ -1220,11 +1274,11 @@ export class ShopifyClient implements ShopifyClientPort {
 
     const variants = res.data.data.nodes.filter(
       (
-        node
+        node,
       ): node is {
         __typename: string;
       } & ProductVariantWithProductDetails =>
-        node?.__typename === "ProductVariant"
+        node?.__typename === "ProductVariant",
     );
     const currencyCode = res.data.data.shop.currencyCode;
 
@@ -1234,7 +1288,7 @@ export class ShopifyClient implements ShopifyClientPort {
   async createDraftOrder(
     accessToken: string,
     myshopifyDomain: string,
-    draftOrderData: CreateDraftOrderPayload
+    draftOrderData: CreateDraftOrderPayload,
   ): Promise<DraftOrderResponse> {
     const graphqlQuery = gql`
       mutation draftOrderCreate($input: DraftOrderInput!) {
@@ -1293,7 +1347,7 @@ export class ShopifyClient implements ShopifyClientPort {
     accessToken: string,
     shop: string,
     draftOrderId: string,
-    variantId: string
+    variantId: string,
   ): Promise<CompleteDraftOrderResponse> {
     // First, load the variant to check if it's available for sale
     const variantResult = await this.loadVariantsByIds(accessToken, shop, [
@@ -1387,7 +1441,7 @@ export class ShopifyClient implements ShopifyClientPort {
   async loadProductsByIds(
     accessToken: string,
     shop: string,
-    productIds: string[]
+    productIds: string[],
   ): Promise<LoadProductsResponse> {
     const myshopifyDomain = await this.getMyShopifyDomain(accessToken, shop);
 
@@ -1427,10 +1481,10 @@ export class ShopifyClient implements ShopifyClientPort {
 
     const products = data.nodes.filter(
       (
-        node
+        node,
       ): node is {
         __typename: string;
-      } & ProductNode => node?.__typename === "Product"
+      } & ProductNode => node?.__typename === "Product",
     );
     const currencyCode = data.shop.currencyCode;
 
@@ -1441,7 +1495,7 @@ export class ShopifyClient implements ShopifyClientPort {
     accessToken: string,
     shop: string,
     limit?: number,
-    next?: string
+    next?: string,
   ): Promise<LoadCustomersResponse> {
     const res = await this.shopifyHTTPRequest<{ customers: any[] }>({
       method: "GET",
@@ -1456,7 +1510,7 @@ export class ShopifyClient implements ShopifyClientPort {
 
     const customers = res.data.customers;
     const nextPageInfo = ShopifyClient.getShopifyOrdersNextPage(
-      res.headers.get("link")
+      res.headers.get("link"),
     );
 
     return { customers, next: nextPageInfo };
@@ -1466,7 +1520,7 @@ export class ShopifyClient implements ShopifyClientPort {
     accessToken: string,
     shop: string,
     tags: string[],
-    externalCustomerId: string
+    externalCustomerId: string,
   ): Promise<boolean> {
     const myshopifyDomain = await this.getMyShopifyDomain(accessToken, shop);
 
@@ -1519,7 +1573,7 @@ export class ShopifyClient implements ShopifyClientPort {
     accessToken: string,
     shop: string,
     callbackUrl: string,
-    topic: ShopifyWebhookTopic
+    topic: ShopifyWebhookTopic,
   ): Promise<ShopifyWebhook> {
     const myshopifyDomain = await this.getMyShopifyDomain(accessToken, shop);
 
@@ -1601,7 +1655,7 @@ export class ShopifyClient implements ShopifyClientPort {
     accessToken: string,
     shop: string,
     callbackUrl: string,
-    topic: ShopifyWebhookTopic
+    topic: ShopifyWebhookTopic,
   ): Promise<ShopifyWebhook | null> {
     const myshopifyDomain = await this.getMyShopifyDomain(accessToken, shop);
 
@@ -1671,7 +1725,7 @@ export class ShopifyClient implements ShopifyClientPort {
   async unsubscribeWebhook(
     accessToken: string,
     shop: string,
-    webhookId: string
+    webhookId: string,
   ): Promise<void> {
     const myshopifyDomain = await this.getMyShopifyDomain(accessToken, shop);
 
@@ -1751,7 +1805,7 @@ export class ShopifyClient implements ShopifyClientPort {
   async getPriceRule(
     accessToken: string,
     shop: string,
-    priceRuleInput: GetPriceRuleInput
+    priceRuleInput: GetPriceRuleInput,
   ): Promise<GetPriceRuleResponse> {
     const myShopifyDomain = await this.getMyShopifyDomain(accessToken, shop);
 
@@ -1780,7 +1834,7 @@ export class ShopifyClient implements ShopifyClientPort {
   }
 
   private mapGraphqlTopicToTopic(
-    topic: ShopifyWebhookTopicGraphql
+    topic: ShopifyWebhookTopicGraphql,
   ): ShopifyWebhookTopic {
     switch (topic) {
       case ShopifyWebhookTopicGraphql.ORDERS_UPDATED:
@@ -1789,7 +1843,7 @@ export class ShopifyClient implements ShopifyClientPort {
   }
 
   private mapTopicToGraphqlTopic(
-    topic: ShopifyWebhookTopic
+    topic: ShopifyWebhookTopic,
   ): ShopifyWebhookTopicGraphql {
     switch (topic) {
       case ShopifyWebhookTopic.ORDERS_UPDATED:

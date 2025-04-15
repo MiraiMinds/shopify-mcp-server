@@ -247,6 +247,17 @@ export type ShopifyOrder = {
   };
 };
 
+export type UpdateShopifyOrderShippingAdress = {
+  id: string;
+  shippingAddress: {
+    address1: string;
+    address2: string;
+    city: string;
+    countryCode: string;
+    zip: string;
+  };
+};
+
 export type ShopifyOrdersResponse = {
   data: {
     orders: {
@@ -262,7 +273,7 @@ export type ShopifyOrdersResponse = {
 };
 
 export function isShopifyOrder(
-  shopifyOrder: any
+  shopifyOrder: any,
 ): shopifyOrder is ShopifyOrder {
   return (
     shopifyOrder &&
@@ -282,7 +293,7 @@ export function isShopifyOrder(
 export type ShopifyOrderWebhookPayload = ShopifyOrder;
 
 export function isShopifyOrderWebhookPayload(
-  webhookPayload: any
+  webhookPayload: any,
 ): webhookPayload is ShopifyOrderWebhookPayload {
   return isShopifyOrder(webhookPayload);
 }
@@ -384,6 +395,10 @@ export type ShopifyLoadOrderQueryParams = {
   fields?: string[];
 };
 
+export type ShopifyUpdateOrderShippingAdressQueryParams = {
+  orderId: string;
+};
+
 export type ProductImage = {
   src: string;
   height: number;
@@ -444,7 +459,7 @@ export type GetPriceRuleResponse = {
         id: string;
         title: string;
         status: string;
-      }
+      },
     ];
   };
 };
@@ -611,7 +626,7 @@ export class CustomError extends Error {
 
   static is<E extends typeof CustomError & { code: string }>(
     error: any,
-    ErrorClass: E
+    ErrorClass: E,
   ): error is InstanceType<E> {
     return "code" in error && error.code === ErrorClass.code;
   }
@@ -632,76 +647,76 @@ export class ShopifyClientErrorBase extends CustomError {
 
 export class ShopifyCastObjError extends ShopifyClientErrorBase.make(
   "Error occurred on Shopify cast object",
-  "SHOPIFY_CLIENT.SHOPIFY_CAST_ERROR"
+  "SHOPIFY_CLIENT.SHOPIFY_CAST_ERROR",
 ) {}
 
 export class ShopifyAuthorizationError extends ShopifyClientErrorBase.make(
   "Shopify authorization error",
-  "SHOPIFY_CLIENT.AUTHORIZATION_ERROR"
+  "SHOPIFY_CLIENT.AUTHORIZATION_ERROR",
 ) {}
 
 export class ShopifyRequestError extends ShopifyClientErrorBase.make(
   "Shopify request error",
-  "SHOPIFY_CLIENT.REQUEST_ERROR"
+  "SHOPIFY_CLIENT.REQUEST_ERROR",
 ) {}
 
 export class ShopifyInputError extends ShopifyClientErrorBase.make(
   "Shopify input error",
-  "SHOPIFY_CLIENT.INPUT_ERROR"
+  "SHOPIFY_CLIENT.INPUT_ERROR",
 ) {}
 
 export class ShopifyRateLimitingError extends ShopifyClientErrorBase.make(
   "Shopify rate limiting error",
-  "SHOPIFY_CLIENT.RATE_LIMITING_ERROR"
+  "SHOPIFY_CLIENT.RATE_LIMITING_ERROR",
 ) {}
 
 export class ShopifyServerInfrastructureError extends ShopifyClientErrorBase.make(
   "Shopify server or infrastructure error",
-  "SHOPIFY_CLIENT.SERVER_INFRASTRUCTURE_ERROR"
+  "SHOPIFY_CLIENT.SERVER_INFRASTRUCTURE_ERROR",
 ) {}
 
 export class ShopifyPaymentError extends ShopifyClientErrorBase.make(
   "Shopify payment error",
-  "SHOPIFY_CLIENT.PAYMENT_ERROR"
+  "SHOPIFY_CLIENT.PAYMENT_ERROR",
 ) {}
 export class GeneralShopifyClientError extends ShopifyClientErrorBase.make(
   "Error occurred on Shopify API client",
-  "SHOPIFY_CLIENT.SHOPIFY_CLIENT_ERROR"
+  "SHOPIFY_CLIENT.SHOPIFY_CLIENT_ERROR",
 ) {}
 export class ShopifyWebShopNotFoundError extends ShopifyClientErrorBase.make(
   "The Shopify webshop not found",
-  "SHOPIFY_CLIENT.WEBSHOP_CONNECTION_NOT_FOUND"
+  "SHOPIFY_CLIENT.WEBSHOP_CONNECTION_NOT_FOUND",
 ) {}
 
 export class ShopifyProductVariantNotFoundError extends ShopifyClientErrorBase.make(
   "The Shopify product variant not found",
-  "SHOPIFY_CLIENT.PRODUCT_VARIANT_NOT_FOUND"
+  "SHOPIFY_CLIENT.PRODUCT_VARIANT_NOT_FOUND",
 ) {}
 
 export class ShopifyProductVariantNotAvailableForSaleError extends ShopifyClientErrorBase.make(
   "The Shopify product variant is not available for sale",
-  "SHOPIFY_CLIENT.PRODUCT_VARIANT_NOT_AVAILABLE_FOR_SALE"
+  "SHOPIFY_CLIENT.PRODUCT_VARIANT_NOT_AVAILABLE_FOR_SALE",
 ) {}
 
 export class InvalidShopifyCurrencyError extends ShopifyClientErrorBase.make(
   "The Shopify currency is invalid",
-  "SHOPIFY_CLIENT.INVALID_CURRENCY"
+  "SHOPIFY_CLIENT.INVALID_CURRENCY",
 ) {}
 
 export class ShopifyWebhookNotFoundError extends ShopifyClientErrorBase.make(
   "The Shopify webhook not found",
-  "SHOPIFY_CLIENT.WEBHOOK_NOT_FOUND"
+  "SHOPIFY_CLIENT.WEBHOOK_NOT_FOUND",
 ) {}
 
 export class ShopifyWebhookAlreadyExistsError extends ShopifyClientErrorBase.make(
   "The Shopify webhook already exists",
-  "SHOPIFY_CLIENT.WEBHOOK_ALREADY_EXISTS"
+  "SHOPIFY_CLIENT.WEBHOOK_ALREADY_EXISTS",
 ) {}
 
 export function getHttpShopifyError(
   error: any,
   statusCode: number,
-  contextData?: Record<string, any>
+  contextData?: Record<string, any>,
 ): ShopifyClientErrorBase {
   switch (statusCode) {
     case 401:
@@ -751,7 +766,7 @@ export function getHttpShopifyError(
 
 export function getGraphqlShopifyUserError(
   errors: any[],
-  contextData?: Record<string, any>
+  contextData?: Record<string, any>,
 ): ShopifyClientErrorBase {
   const hasErrorWithMessage = (messages: string[]): boolean =>
     errors.some((error) => messages.includes(error.message));
@@ -786,7 +801,7 @@ export function getGraphqlShopifyUserError(
 export function getGraphqlShopifyError(
   errors: any[],
   statusCode: number,
-  contextData?: Record<string, any>
+  contextData?: Record<string, any>,
 ): ShopifyClientErrorBase {
   const hasErrorWithCode = (codes: string[]): boolean =>
     errors.some((error) => codes.includes(error.extensions?.code));
@@ -928,97 +943,97 @@ export interface ShopifyClientPort {
   createPriceRule(
     accessToken: string,
     shop: string,
-    priceRuleInput: CreatePriceRuleInput
+    priceRuleInput: CreatePriceRuleInput,
   ): Promise<CreatePriceRuleResponse>;
 
   createDiscountCode(
     accessToken: string,
     shop: string,
     code: string,
-    priceRuleId: string
+    priceRuleId: string,
   ): Promise<CreateDiscountCodeResponse>;
 
   deletePriceRule(
     accessToken: string,
     shop: string,
-    priceRuleId: string
+    priceRuleId: string,
   ): Promise<void>;
 
   deleteDiscountCode(
     accessToken: string,
     shop: string,
     priceRuleId: string,
-    discountCodeId: string
+    discountCodeId: string,
   ): Promise<void>;
 
   createBasicDiscountCode(
     accessToken: string,
     shop: string,
-    discountInput: CreateBasicDiscountCodeInput
+    discountInput: CreateBasicDiscountCodeInput,
   ): Promise<CreateBasicDiscountCodeResponse>;
 
   deleteBasicDiscountCode(
     accessToken: string,
     shop: string,
-    discountCodeId: string
+    discountCodeId: string,
   ): Promise<void>;
 
   loadOrders(
     accessToken: string,
     shop: string,
-    queryParams: ShopifyOrdersGraphqlQueryParams
+    queryParams: ShopifyOrdersGraphqlQueryParams,
   ): Promise<ShopifyOrdersGraphqlResponse>;
 
   loadOrder(
     accessToken: string,
     myshopifyDomain: string,
-    queryParams: ShopifyLoadOrderQueryParams
+    queryParams: ShopifyLoadOrderQueryParams,
   ): Promise<ShopifyOrder>;
 
   subscribeWebhook(
     accessToken: string,
     myshopifyDomain: string,
     callbackUrl: string,
-    topic: ShopifyWebhookTopic
+    topic: ShopifyWebhookTopic,
   ): Promise<ShopifyWebhook>;
 
   unsubscribeWebhook(
     accessToken: string,
     myshopifyDomain: string,
-    webhookId: string
+    webhookId: string,
   ): Promise<void>;
 
   findWebhookByTopicAndCallbackUrl(
     accessToken: string,
     myshopifyDomain: string,
     callbackUrl: string,
-    topic: ShopifyWebhookTopic
+    topic: ShopifyWebhookTopic,
   ): Promise<ShopifyWebhook | null>;
 
   loadCollections(
     accessToken: string,
     myshopifyDomain: string,
     queryParams: ShopifyQueryParams,
-    next?: string
+    next?: string,
   ): Promise<LoadCollectionsResponse>;
 
   loadShop(
     accessToken: string,
-    myshopifyDomain: string
+    myshopifyDomain: string,
   ): Promise<LoadStorefrontsResponse>;
 
   loadCustomers(
     accessToken: string,
     myshopifyDomain: string,
     limit?: number,
-    next?: string
+    next?: string,
   ): Promise<LoadCustomersResponse>;
 
   tagCustomer(
     accessToken: string,
     myshopifyDomain: string,
     tags: string[],
-    customerId: string
+    customerId: string,
   ): Promise<boolean>;
 
   loadProducts(
@@ -1026,7 +1041,7 @@ export interface ShopifyClientPort {
     myshopifyDomain: string,
     searchTitle: string | null,
     limit?: number,
-    afterCursor?: string
+    afterCursor?: string,
   ): Promise<LoadProductsResponse>;
 
   loadProductsByCollectionId(
@@ -1034,33 +1049,33 @@ export interface ShopifyClientPort {
     myshopifyDomain: string,
     collectionId: string,
     limit?: number,
-    afterCursor?: string
+    afterCursor?: string,
   ): Promise<LoadProductsResponse>;
 
   loadProductsByIds(
     accessToken: string,
     shop: string,
-    productIds: string[]
+    productIds: string[],
   ): Promise<LoadProductsByIdsResponse>;
 
   loadVariantsByIds(
     accessToken: string,
     shop: string,
-    variantIds: string[]
+    variantIds: string[],
   ): Promise<LoadVariantsByIdResponse>;
 
   createDraftOrder(
     accessToken: string,
     shop: string,
     draftOrderData: CreateDraftOrderPayload,
-    idempotencyKey: string
+    idempotencyKey: string,
   ): Promise<DraftOrderResponse>;
 
   completeDraftOrder(
     accessToken: string,
     shop: string,
     draftOrderId: string,
-    variantId: string
+    variantId: string,
   ): Promise<CompleteDraftOrderResponse>;
 
   getIdFromGid(gid: string): string;

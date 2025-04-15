@@ -42,7 +42,7 @@ function formatProduct(product: ProductNode): string {
     variant.price: ${variant.node.price}
     variant.sku: ${variant.node.sku}
     variant.inventoryPolicy: ${variant.node.inventoryPolicy}
-    `
+    `,
     )
     .join(", ")}
   `;
@@ -93,7 +93,7 @@ function formatOrder(order: ShopifyOrderGraphql): string {
       SKU: ${item.variant.sku || "N/A"}
       Price: ${item.variant.price}`
         : "No variant information"
-    }`
+    }`,
           )
           .join("\n")
       : "No items"
@@ -119,7 +119,7 @@ server.tool(
         SHOPIFY_ACCESS_TOKEN,
         MYSHOPIFY_DOMAIN,
         searchTitle ?? null,
-        limit
+        limit,
       );
       const formattedProducts = products.products.map(formatProduct);
       return {
@@ -128,7 +128,7 @@ server.tool(
     } catch (error) {
       return handleError("Failed to retrieve products data", error);
     }
-  }
+  },
 );
 
 server.tool(
@@ -151,7 +151,7 @@ server.tool(
         SHOPIFY_ACCESS_TOKEN,
         MYSHOPIFY_DOMAIN,
         collectionId,
-        limit
+        limit,
       );
       const formattedProducts = products.products.map(formatProduct);
       return {
@@ -160,7 +160,7 @@ server.tool(
     } catch (error) {
       return handleError("Failed to retrieve products from collection", error);
     }
-  }
+  },
 );
 
 server.tool(
@@ -177,7 +177,7 @@ server.tool(
       const products = await client.loadProductsByIds(
         SHOPIFY_ACCESS_TOKEN,
         MYSHOPIFY_DOMAIN,
-        productIds
+        productIds,
       );
       const formattedProducts = products.products.map(formatProduct);
       return {
@@ -186,7 +186,7 @@ server.tool(
     } catch (error) {
       return handleError("Failed to retrieve products by IDs", error);
     }
-  }
+  },
 );
 
 server.tool(
@@ -203,7 +203,7 @@ server.tool(
       const variants = await client.loadVariantsByIds(
         SHOPIFY_ACCESS_TOKEN,
         MYSHOPIFY_DOMAIN,
-        variantIds
+        variantIds,
       );
       return {
         content: [{ type: "text", text: JSON.stringify(variants, null, 2) }],
@@ -211,7 +211,7 @@ server.tool(
     } catch (error) {
       return handleError("Failed to retrieve variants", error);
     }
-  }
+  },
 );
 
 // Customer Tools
@@ -229,7 +229,7 @@ server.tool(
         SHOPIFY_ACCESS_TOKEN,
         MYSHOPIFY_DOMAIN,
         limit,
-        next
+        next,
       );
       return {
         content: [{ type: "text", text: JSON.stringify(response, null, 2) }],
@@ -237,7 +237,7 @@ server.tool(
     } catch (error) {
       return handleError("Failed to retrieve customers data", error);
     }
-  }
+  },
 );
 
 server.tool(
@@ -254,7 +254,7 @@ server.tool(
         SHOPIFY_ACCESS_TOKEN,
         MYSHOPIFY_DOMAIN,
         tags,
-        customerId
+        customerId,
       );
       return {
         content: [
@@ -269,7 +269,7 @@ server.tool(
     } catch (error) {
       return handleError("Failed to tag customer", error);
     }
-  }
+  },
 );
 
 // Order Tools
@@ -305,7 +305,7 @@ server.tool(
           query,
           sortKey,
           reverse,
-        }
+        },
       );
       const formattedOrders = response.orders.map(formatOrder);
       return {
@@ -314,7 +314,7 @@ server.tool(
     } catch (error) {
       return handleError("Failed to retrieve orders data", error);
     }
-  }
+  },
 );
 
 server.tool(
@@ -329,7 +329,7 @@ server.tool(
       const order = await client.loadOrder(
         SHOPIFY_ACCESS_TOKEN,
         MYSHOPIFY_DOMAIN,
-        { orderId }
+        { orderId },
       );
       return {
         content: [{ type: "text", text: JSON.stringify(order, null, 2) }],
@@ -337,7 +337,45 @@ server.tool(
     } catch (error) {
       return handleError("Failed to retrieve order", error);
     }
-  }
+  },
+);
+
+server.tool(
+  "update-shipping-address",
+  "Update shipping address of order",
+  {
+    orderId: z.string().describe("ID of the order to retrieve"),
+    address1: z.string().describe("Address line 1 of shipping address"),
+    address2: z
+      .string()
+      .optional()
+      .describe("Address line 2 of shipping address"),
+    city: z.string().describe("City of shipping address"),
+    country: z.string().describe("Country of shipping address"),
+    zip: z.string().describe("Zip code of shipping address"),
+  },
+  async ({ orderId, address1, address2, city, country, zip }) => {
+    const client = new ShopifyClient();
+    try {
+      const order = client.updateOrderShippingAddress(
+        SHOPIFY_ACCESS_TOKEN,
+        MYSHOPIFY_DOMAIN,
+        { orderId },
+        {
+          address1,
+          address2,
+          city,
+          country,
+          zip,
+        },
+      );
+      return {
+        content: [{ type: "text", text: JSON.stringify(order, null, 2) }],
+      };
+    } catch (error) {
+      return handleError("Failed to update shipping address of order", error);
+    }
+  },
 );
 
 // Discount Tools
@@ -389,7 +427,7 @@ server.tool(
       const discount = await client.createBasicDiscountCode(
         SHOPIFY_ACCESS_TOKEN,
         MYSHOPIFY_DOMAIN,
-        discountInput
+        discountInput,
       );
       return {
         content: [{ type: "text", text: JSON.stringify(discount, null, 2) }],
@@ -397,7 +435,7 @@ server.tool(
     } catch (error) {
       return handleError("Failed to create discount", error);
     }
-  }
+  },
 );
 
 // Draft Order Tools
@@ -410,7 +448,7 @@ server.tool(
         z.object({
           variantId: z.string(),
           quantity: z.number(),
-        })
+        }),
       )
       .describe("Line items to add to the order"),
     email: z.string().email().describe("Customer email"),
@@ -442,7 +480,7 @@ server.tool(
       const draftOrder = await client.createDraftOrder(
         SHOPIFY_ACCESS_TOKEN,
         MYSHOPIFY_DOMAIN,
-        draftOrderData
+        draftOrderData,
       );
       return {
         content: [{ type: "text", text: JSON.stringify(draftOrder, null, 2) }],
@@ -450,7 +488,7 @@ server.tool(
     } catch (error) {
       return handleError("Failed to create draft order", error);
     }
-  }
+  },
 );
 
 server.tool(
@@ -467,7 +505,7 @@ server.tool(
         SHOPIFY_ACCESS_TOKEN,
         MYSHOPIFY_DOMAIN,
         draftOrderId,
-        variantId
+        variantId,
       );
       return {
         content: [
@@ -477,7 +515,7 @@ server.tool(
     } catch (error) {
       return handleError("Failed to complete draft order", error);
     }
-  }
+  },
 );
 
 // Collection Tools
@@ -498,7 +536,7 @@ server.tool(
       const collections = await client.loadCollections(
         SHOPIFY_ACCESS_TOKEN,
         MYSHOPIFY_DOMAIN,
-        { limit, name }
+        { limit, name },
       );
       return {
         content: [{ type: "text", text: JSON.stringify(collections, null, 2) }],
@@ -506,7 +544,7 @@ server.tool(
     } catch (error) {
       return handleError("Failed to retrieve collections", error);
     }
-  }
+  },
 );
 
 // Shop Tools
@@ -531,7 +569,7 @@ server.tool(
     try {
       const shopDetails = await client.loadShopDetail(
         SHOPIFY_ACCESS_TOKEN,
-        MYSHOPIFY_DOMAIN
+        MYSHOPIFY_DOMAIN,
       );
       return {
         content: [{ type: "text", text: JSON.stringify(shopDetails, null, 2) }],
@@ -539,7 +577,7 @@ server.tool(
     } catch (error) {
       return handleError("Failed to retrieve extended shop details", error);
     }
-  }
+  },
 );
 
 // Webhook Tools
@@ -568,7 +606,7 @@ server.tool(
             SHOPIFY_ACCESS_TOKEN,
             MYSHOPIFY_DOMAIN,
             callbackUrl,
-            topic
+            topic,
           );
           return {
             content: [{ type: "text", text: JSON.stringify(webhook, null, 2) }],
@@ -579,7 +617,7 @@ server.tool(
             SHOPIFY_ACCESS_TOKEN,
             MYSHOPIFY_DOMAIN,
             callbackUrl,
-            topic
+            topic,
           );
           return {
             content: [{ type: "text", text: JSON.stringify(webhook, null, 2) }],
@@ -592,7 +630,7 @@ server.tool(
           await client.unsubscribeWebhook(
             SHOPIFY_ACCESS_TOKEN,
             MYSHOPIFY_DOMAIN,
-            webhookId
+            webhookId,
           );
           return {
             content: [
@@ -604,13 +642,13 @@ server.tool(
     } catch (error) {
       return handleError("Failed to manage webhook", error);
     }
-  }
+  },
 );
 
 // Utility function to handle errors
 function handleError(
   defaultMessage: string,
-  error: unknown
+  error: unknown,
 ): {
   content: { type: "text"; text: string }[];
   isError: boolean;
