@@ -182,7 +182,7 @@ Note: Replace "path/to/shopify-mcp-server" with the actual path to your cloned r
 
 ### Discount Management
 
-11. `create-discount`
+12. `create-discount`
     - Create a basic discount code
     - Inputs:
       - `title` (string): Discount title
@@ -195,7 +195,7 @@ Note: Replace "path/to/shopify-mcp-server" with the actual path to your cloned r
 
 ### Collection Management
 
-12. `get-collections`
+13. `get-collections`
     - Get all collections
     - Inputs:
       - `limit` (optional number, default: 10)
@@ -203,18 +203,18 @@ Note: Replace "path/to/shopify-mcp-server" with the actual path to your cloned r
 
 ### Shop Information
 
-13. `get-shop`
+14. `get-shop`
 
     - Get basic shop details
     - No inputs required
 
-14. `get-shop-details`
+15. `get-shop-details`
     - Get extended shop details
     - No inputs required
 
 ### Webhook Management
 
-15. `manage-webhook`
+16. `manage-webhook`
     - Manage webhooks
     - Inputs:
       - `action` (enum): 'subscribe', 'find', 'unsubscribe'
