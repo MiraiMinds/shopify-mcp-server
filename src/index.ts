@@ -50,8 +50,7 @@ function formatProduct(product: ProductNode): string {
 
 function formatOrder(order: ShopifyOrderGraphql): string {
   return `
-  Order Id: ${order.id.split("/").pop()}
-  Order name: ${order.name}
+  order_id: ${order.id.split("/").pop()}
   Created At: ${order.createdAt}
   Status: ${order.displayFinancialStatus || "N/A"}
   Email: ${order.email || "N/A"}
