@@ -835,8 +835,10 @@ export class ShopifyClient implements ShopifyClientPort {
               email
             }
             shippingAddress {
-              provinceCode
-              countryCode
+              address1
+              address2
+              formattedArea
+              zip
             }
             lineItems(first: 50) {
               nodes {
