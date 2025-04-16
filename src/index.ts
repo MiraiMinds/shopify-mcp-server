@@ -51,6 +51,7 @@ function formatProduct(product: ProductNode): string {
 function formatOrder(order: ShopifyOrderGraphql): object {
   return {
     order_id: order.id.split("/").pop(),
+    fulfillments: order.fulfillments,
     products: order.lineItems.nodes.length > 0
       ? order.lineItems.nodes.map((item) => ({
           title: item.title,
@@ -67,8 +68,7 @@ function formatOrder(order: ShopifyOrderGraphql): object {
               }
             : null,
         }))
-      : []
-  
+      : [],
   }
 }
 

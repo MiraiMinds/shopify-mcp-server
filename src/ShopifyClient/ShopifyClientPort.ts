@@ -899,6 +899,7 @@ export type ShopifyOrderGraphql = {
     provinceCode: string | null;
     countryCode: string;
   } | null;
+  fulfillments: any,
   lineItems: {
     nodes: Array<{
       id: string;
