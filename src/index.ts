@@ -357,7 +357,7 @@ server.tool(
   async ({ orderId, address1, address2, city, country, zip }) => {
     const client = new ShopifyClient();
     try {
-      const order = client.updateOrderShippingAddress(
+      const order = await client.updateOrderShippingAddress(
         SHOPIFY_ACCESS_TOKEN,
         MYSHOPIFY_DOMAIN,
         { orderId },
@@ -369,6 +369,7 @@ server.tool(
           zip,
         },
       );
+
       return {
         content: [{ type: "text", text: JSON.stringify(order, null, 2) }],
       };
