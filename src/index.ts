@@ -48,57 +48,28 @@ function formatProduct(product: ProductNode): string {
   `;
 }
 
-function formatOrder(order: ShopifyOrderGraphql): string {
-  return `
-  order_id: ${order.id.split("/").pop()}
-  Created At: ${order.createdAt}
-  Status: ${order.displayFinancialStatus || "N/A"}
-  Email: ${order.email || "N/A"}
-  Phone: ${order.phone || "N/A"}
+function formatOrder(order: ShopifyOrderGraphql): object {
+  return {
+    order_id: order.id.split("/").pop(),
+    products: order.lineItems.nodes.length > 0
+      ? order.lineItems.nodes.map((item) => ({
+          title: item.title,
+          quantity: item.quantity,
+          price: {
+            amount: item.originalTotalSet.shopMoney.amount,
+            currency: item.originalTotalSet.shopMoney.currencyCode,
+          },
+          variant: item.variant
+            ? {
+                title: item.variant.title,
+                sku: item.variant.sku || "N/A",
+                price: item.variant.price,
+              }
+            : null,
+        }))
+      : []
   
-  Total Price: ${order.totalPriceSet.shopMoney.amount} ${
-    order.totalPriceSet.shopMoney.currencyCode
   }
-  
-  Customer: ${
-    order.customer
-      ? `
-    ID: ${order.customer.id}
-    Email: ${order.customer.email}`
-      : "No customer information"
-  }
-
-  Shipping Address: ${
-    order.shippingAddress
-      ? `
-    Province: ${order.shippingAddress.provinceCode || "N/A"}
-    Country: ${order.shippingAddress.countryCode}`
-      : "No shipping address"
-  }
-
-  Line Items: ${
-    order.lineItems.nodes.length > 0
-      ? order.lineItems.nodes
-          .map(
-            (item) => `
-    Title: ${item.title}
-    Quantity: ${item.quantity}
-    Price: ${item.originalTotalSet.shopMoney.amount} ${
-              item.originalTotalSet.shopMoney.currencyCode
-            }
-    Variant: ${
-      item.variant
-        ? `
-      Title: ${item.variant.title}
-      SKU: ${item.variant.sku || "N/A"}
-      Price: ${item.variant.price}`
-        : "No variant information"
-    }`,
-          )
-          .join("\n")
-      : "No items"
-  }
-  `;
 }
 
 // Products Tools
@@ -309,7 +280,7 @@ server.tool(
       );
       const formattedOrders = response.orders.map(formatOrder);
       return {
-        content: [{ type: "text", text: formattedOrders.join("\n---\n") }],
+        content: [{ type: "text", text: JSON.stringify(formattedOrders) }],
       };
     } catch (error) {
       return handleError("Failed to retrieve orders data", error);
