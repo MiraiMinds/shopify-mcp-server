@@ -913,6 +913,9 @@ export class ShopifyClient implements ShopifyClientPort {
           displayFinancialStatus
           email
           phone
+          fulfillments(first: 10) {
+            displayStatus
+          }
           totalPriceSet {
             shopMoney {
               amount
