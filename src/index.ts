@@ -33,18 +33,9 @@ if (!MYSHOPIFY_DOMAIN) {
 function formatProduct(product: ProductNode): string {
   return `
   Product: ${product.title} 
-  description: ${product.description} 
-  handle: ${product.handle}
-  variants: ${product.variants.edges
-    .map(
-      (variant) => `variant.title: ${variant.node.title}
-    variant.id: ${variant.node.id}
-    variant.price: ${variant.node.price}
-    variant.sku: ${variant.node.sku}
-    variant.inventoryPolicy: ${variant.node.inventoryPolicy}
-    `,
-    )
-    .join(", ")}
+  price: ${product.variants.edges[0].node.price}
+  description: ${product.description}   
+  ===========================================
   `;
 }
 
