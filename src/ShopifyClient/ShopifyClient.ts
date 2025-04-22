@@ -992,6 +992,13 @@ export class ShopifyClient implements ShopifyClientPort {
     queryParams: ShopifyUpdateOrderShippingAdressQueryParams,
     shippingAddress: { [key: string]: unknown },
   ): Promise<UpdateShopifyOrderShippingAdress> {
+    // get order id from the order name
+    const getOrdersByName = await this.loadOrders(accessToken, shop, {
+      query: `name:${queryParams.orderId}`, // here orderId refers the order name
+    });
+
+    const orderId = getOrdersByName.orders[0].id;
+
     const graphqlQuery = gql`
       mutation updateOrderShippingAddress($input: OrderInput!) {
         orderUpdate(input: $input) {
@@ -1027,7 +1034,7 @@ export class ShopifyClient implements ShopifyClientPort {
       variables: {
         input: {
           shippingAddress: shippingAddress,
-          id: `gid://shopify/Order/${queryParams.orderId}`,
+          id: orderId,
         },
       },
     });
