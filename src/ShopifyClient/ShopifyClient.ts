@@ -995,6 +995,7 @@ export class ShopifyClient implements ShopifyClientPort {
     // get order id from the order name
     const getOrdersByName = await this.loadOrders(accessToken, shop, {
       query: `name:${queryParams.orderId}`, // here orderId refers the order name
+      first: 1,
     });
 
     const orderId = getOrdersByName.orders[0].id;
