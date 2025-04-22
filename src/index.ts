@@ -43,24 +43,25 @@ function formatOrder(order: ShopifyOrderGraphql): object {
   return {
     order_id: order.id.split("/").pop(),
     fulfillments: order.fulfillments,
-    products: order.lineItems.nodes.length > 0
-      ? order.lineItems.nodes.map((item) => ({
-          title: item.title,
-          quantity: item.quantity,
-          price: {
-            amount: item.originalTotalSet.shopMoney.amount,
-            currency: item.originalTotalSet.shopMoney.currencyCode,
-          },
-          variant: item.variant
-            ? {
-                title: item.variant.title,
-                sku: item.variant.sku || "N/A",
-                price: item.variant.price,
-              }
-            : null,
-        }))
-      : [],
-  }
+    products:
+      order.lineItems.nodes.length > 0
+        ? order.lineItems.nodes.map((item) => ({
+            title: item.title,
+            quantity: item.quantity,
+            price: {
+              amount: item.originalTotalSet.shopMoney.amount,
+              currency: item.originalTotalSet.shopMoney.currencyCode,
+            },
+            variant: item.variant
+              ? {
+                  title: item.variant.title,
+                  sku: item.variant.sku || "N/A",
+                  price: item.variant.price,
+                }
+              : null,
+          }))
+        : [],
+  };
 }
 
 // Products Tools
@@ -73,8 +74,12 @@ server.tool(
       .optional()
       .describe("Search title, if missing, will return all products"),
     limit: z.number().describe("Maximum number of products to return"),
+    page: z
+      .string()
+      .optional()
+      .describe("next page cursor to get next products"),
   },
-  async ({ searchTitle, limit }) => {
+  async ({ searchTitle, limit, page }) => {
     const client = new ShopifyClient();
     try {
       const products = await client.loadProducts(
@@ -82,10 +87,17 @@ server.tool(
         MYSHOPIFY_DOMAIN,
         searchTitle ?? null,
         limit,
+        page,
       );
       const formattedProducts = products.products.map(formatProduct);
       return {
-        content: [{ type: "text", text: formattedProducts.join("\n") }],
+        content: [
+          {
+            type: "text",
+            text: formattedProducts.join("\n"),
+            nextPage: products.next,
+          },
+        ],
       };
     } catch (error) {
       return handleError("Failed to retrieve products data", error);
