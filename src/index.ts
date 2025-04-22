@@ -281,9 +281,10 @@ server.tool(
           reverse,
         },
       );
-      const formattedOrders = response.orders.map(formatOrder);
       return {
-        content: [{ type: "text", text: JSON.stringify(formattedOrders) }],
+        content: [
+          { type: "text", text: JSON.stringify(response.orders, null, 2) },
+        ],
       };
     } catch (error) {
       return handleError("Failed to retrieve orders data", error);
